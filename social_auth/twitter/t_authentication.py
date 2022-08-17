@@ -1,11 +1,9 @@
-import json
 from typing import Any
 
 from fastapi import APIRouter
 from starlette.requests import Request
-from starlette.responses import HTMLResponse, RedirectResponse
+from starlette.responses import RedirectResponse
 from social_auth import oauth
-from social_auth.twitter import services
 
 
 router = APIRouter(
@@ -21,12 +19,6 @@ oauth.register(
 )
 
 
-@router.get('/twitter')
-async def homepage(request: Request):
-    service_obj = services.Twitter(request)
-    return service_obj.homepage()
-
-
 @router.get('/twitter/login')
 async def login(request: Request) -> Any:
     redirect_uri = request.url_for('twitter_auth')
@@ -36,16 +28,10 @@ async def login(request: Request) -> Any:
 @router.get('/twitter/auth')
 async def twitter_auth(request: Request):
     token = await oauth.twitter.authorize_access_token(request)
-    url = 'account/verify_credentials.json'
+    url = 'https://api.twitter.com/1.1/account/verify_credentials.json'
     resp = await oauth.twitter.get(
-        url, params={'skip_status': True}, token=token)
+        url, params={'skip_status': True, 'include_email': True}, token=token)
     user = resp.json()
     if user:
         request.session['user'] = dict(user)
-    return RedirectResponse(url='/twitter')
-
-
-@router.route('/twitter/logout')
-async def logout(request):
-    request.session.pop('user', None)
-    return RedirectResponse(url='/twitter')
+    return RedirectResponse(url='/')

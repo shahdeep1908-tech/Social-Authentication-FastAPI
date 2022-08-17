@@ -3,7 +3,6 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse
 from authlib.integrations.starlette_client import OAuthError
 from social_auth import oauth
-from social_auth.google import services
 
 
 router = APIRouter(
@@ -20,13 +19,7 @@ oauth.register(
 )
 
 
-@router.get('/google')
-async def homepage(request: Request):
-    service_obj = services.Google(request)
-    return service_obj.homepage()
-
-
-@router.route('/google/login')
+@router.get('/google/login')
 async def login(request: Request):
     redirect_uri = request.url_for('auth')
     return await oauth.google.authorize_redirect(request, redirect_uri)
@@ -41,10 +34,4 @@ async def auth(request: Request):
     user = token.get('userinfo')
     if user:
         request.session['user'] = dict(user)
-    return RedirectResponse(url='/google')
-
-
-@router.get('/google/logout')
-async def logout(request: Request):
-    request.session.pop('user', None)
-    return RedirectResponse(url='/google')
+    return RedirectResponse(url='/')
