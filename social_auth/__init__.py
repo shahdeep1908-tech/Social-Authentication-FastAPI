@@ -21,6 +21,7 @@ def create_app():
     from social_auth.facebook import f_authentication
     from social_auth.github import git_authentication
     from social_auth.linkedin import l_authentication
+    from social_auth.instagram import i_authentication
     from social_auth import views
 
     app.include_router(views.router)
@@ -29,5 +30,6 @@ def create_app():
     app.include_router(f_authentication.router)
     app.include_router(git_authentication.router)
     app.include_router(l_authentication.router)
+    app.include_router(i_authentication.router)
 
     return app

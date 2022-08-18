@@ -23,4 +23,6 @@ class SocialAuthHomepage:
                             '<br><hr>'
                             '<a href="/github/login">Github Login</a>'
                             '<br><hr>'
-                            '<a href="/linkedin/login">LinkedIn Login</a>')
+                            '<a href="/linkedin/login">LinkedIn Login</a>'
+                            '<br><hr>'
+                            '<a href="/instagram/login">Instagram Login</a>')

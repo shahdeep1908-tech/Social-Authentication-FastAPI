@@ -28,8 +28,8 @@ async def login(request: Request):
 @router.get('/facebook/auth')
 async def facebook_auth(request: Request):
     token = await oauth.facebook.authorize_access_token(request)
-    resp = oauth.facebook.get(
-        'https://graph.facebook.com/me?fields=id,name,email,picture{url}')
+    url = 'https://graph.facebook.com/me?fields=id,name,email,picture{url}'
+    resp = await oauth.facebook.get(url, token=token)
     user = resp.json()
     if user:
         request.session['user'] = dict(user)
