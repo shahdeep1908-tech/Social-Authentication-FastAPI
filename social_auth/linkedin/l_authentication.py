@@ -37,16 +37,14 @@ async def linkedin_auth(request: Request):
     user_data = models.User.check_user_exists(user['EmailAddress']['elements'][0]['handle~']['emailAddress'])
     if user_data:
         return {'status_code': 200,
-                'msg': 'User Exists! Login Successful',
-                'data': user}
+                'msg': 'User Exists! Login Successful'}
     else:
         type_tiny = pyshorteners.Shortener()
         short_url = type_tiny.tinyurl.short(user['profilePicture']['displayImage~']['elements'][0]['identifiers'][0]['identifier'])
         new_user = models.User.create_user(str(user['id']), None, user['EmailAddress']['elements'][0]['handle~']['emailAddress'], short_url)
         if new_user:
             return {'status_code': 200,
-                    'msg': 'New User Created! Login Successful',
-                    'data': user}
+                    'msg': 'New User Created! Login Successful'}
         else:
             return RedirectResponse(url='/')
 

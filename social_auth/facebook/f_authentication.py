@@ -37,15 +37,13 @@ async def facebook_auth(request: Request):
     user_data = models.User.check_user_exists(user['email'])
     if user_data:
         return {'status_code': 200,
-                'msg': 'User Exists! Login Successful',
-                'data': user}
+                'msg': 'User Exists! Login Successful'}
     else:
         type_tiny = pyshorteners.Shortener()
         short_url = type_tiny.tinyurl.short(user['picture']['data']['url'])
         new_user = models.User.create_user(user['id'], user['name'], user['email'], short_url)
         if new_user:
             return {'status_code': 200,
-                    'msg': 'New User Created! Login Successful',
-                    'data': user}
+                    'msg': 'New User Created! Login Successful'}
         else:
             return RedirectResponse(url='/')
