@@ -1,8 +1,9 @@
+import pyshorteners
 from fastapi import APIRouter
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse
 from authlib.integrations.starlette_client import OAuthError
-from social_auth import oauth
+from social_auth import oauth, models
 
 
 router = APIRouter(
@@ -32,6 +33,18 @@ async def auth(request: Request):
     except OAuthError as error:
         return HTMLResponse(f'<h1>{error.error}</h1>')
     user = token.get('userinfo')
-    if user:
-        request.session['user'] = dict(user)
-    return RedirectResponse(url='/')
+    # print(user)
+    # print(user['picture'])
+    user_data = models.User.check_user_exists(user['email'])
+    if user_data:
+        return {'status_code': 200,
+                'msg': 'User Exists! Login Successful',
+                'data': user}
+    else:
+        new_user = models.User.create_user(str(user['sub']), user['name'], user['email'], user['picture'])
+        if new_user:
+            return {'status_code': 200,
+                    'msg': 'New User Created! Login Successful',
+                    'data': user}
+        else:
+            return RedirectResponse(url='/')

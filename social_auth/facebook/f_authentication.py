@@ -3,6 +3,8 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from social_auth import oauth
 from dotenv import load_dotenv
+from social_auth import models
+import pyshorteners
 
 load_dotenv()
 
@@ -31,7 +33,19 @@ async def facebook_auth(request: Request):
     url = 'https://graph.facebook.com/me?fields=id,name,email,picture{url}'
     resp = await oauth.facebook.get(url, token=token)
     user = resp.json()
-    if user:
-        request.session['user'] = dict(user)
-    print("Facebook User ", user)
-    return RedirectResponse(url='/')
+
+    user_data = models.User.check_user_exists(user['email'])
+    if user_data:
+        return {'status_code': 200,
+                'msg': 'User Exists! Login Successful',
+                'data': user}
+    else:
+        type_tiny = pyshorteners.Shortener()
+        short_url = type_tiny.tinyurl.short(user['picture']['data']['url'])
+        new_user = models.User.create_user(user['id'], user['name'], user['email'], short_url)
+        if new_user:
+            return {'status_code': 200,
+                    'msg': 'New User Created! Login Successful',
+                    'data': user}
+        else:
+            return RedirectResponse(url='/')

@@ -1,7 +1,8 @@
+import pyshorteners
 from fastapi import APIRouter
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
-from social_auth import oauth
+from social_auth import oauth, models
 
 
 router = APIRouter(
@@ -25,13 +26,27 @@ async def login(request: Request):
 @router.get('/linkedin/auth')
 async def linkedin_auth(request: Request):
     token = await oauth.linkedin.authorize_access_token(request)
-    profile = 'https://api.linkedin.com/v2/me'
-    resp = await oauth.linkedin.get(profile, token=token)
-    user = resp.json()
+    profile = 'https://api.linkedin.com/v2/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))'
+    prof_resp = await oauth.linkedin.get(profile, token=token)
+    user = prof_resp.json()
     email = 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))'
     resp = await oauth.linkedin.get(email, token=token)
     email = resp.json()
     user['EmailAddress'] = email
-    if user:
-        request.session['user'] = dict(user)
-    return RedirectResponse(url='/')
+
+    user_data = models.User.check_user_exists(user['EmailAddress']['elements'][0]['handle~']['emailAddress'])
+    if user_data:
+        return {'status_code': 200,
+                'msg': 'User Exists! Login Successful',
+                'data': user}
+    else:
+        type_tiny = pyshorteners.Shortener()
+        short_url = type_tiny.tinyurl.short(user['profilePicture']['displayImage~']['elements'][0]['identifiers'][0]['identifier'])
+        new_user = models.User.create_user(str(user['id']), None, user['EmailAddress']['elements'][0]['handle~']['emailAddress'], short_url)
+        if new_user:
+            return {'status_code': 200,
+                    'msg': 'New User Created! Login Successful',
+                    'data': user}
+        else:
+            return RedirectResponse(url='/')
+
