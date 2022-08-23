@@ -2,6 +2,8 @@ from fastapi import APIRouter
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from social_auth import oauth, models
+from starlette.responses import JSONResponse
+from social_auth.oauth2 import create_token
 
 
 router = APIRouter(
@@ -23,7 +25,6 @@ instagram = oauth.register(
 @router.get('/instagram/login')
 async def login(request: Request):
     redirect_uri = request.url_for('insta_auth')
-    print(redirect_uri)
     return await oauth.instagram.authorize_redirect(request, redirect_uri)
 
 
@@ -40,12 +41,14 @@ async def insta_auth(request: Request):
 
     user_data = models.User.check_user_exists(user['username'])
     if user_data:
-        return {'status_code': 200,
-                'msg': 'User Exists! Login Successful'}
+        return JSONResponse({'status_code': 200,
+                             'msg': 'User Exists! Login Successful',
+                             'access_token': create_token(user['username'])})
     else:
         new_user = models.User.create_user(str(user['id']), user['username'], None, None)
         if new_user:
-            return {'status_code': 200,
-                    'msg': 'New User Created! Login Successful'}
+            return JSONResponse({'status_code': 200,
+                                 'msg': 'New User Created! Login Successful',
+                                 'access_token': create_token(user['username'])})
         else:
             return RedirectResponse(url='/')

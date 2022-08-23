@@ -1,10 +1,10 @@
-import pyshorteners
 from fastapi import APIRouter
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse
 from authlib.integrations.starlette_client import OAuthError
 from social_auth import oauth, models
-
+from starlette.responses import JSONResponse
+from social_auth.oauth2 import create_token
 
 router = APIRouter(
     tags=["Authentication"]
@@ -32,17 +32,19 @@ async def auth(request: Request):
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as error:
         return HTMLResponse(f'<h1>{error.error}</h1>')
+
     user = token.get('userinfo')
-    # print(user)
-    # print(user['picture'])
+
     user_data = models.User.check_user_exists(user['email'])
     if user_data:
-        return {'status_code': 200,
-                'msg': 'User Exists! Login Successful'}
+        return JSONResponse({'status_code': 200,
+                             'msg': 'User Exists! Login Successful',
+                             'access_token': create_token(user['email'])})
     else:
         new_user = models.User.create_user(str(user['sub']), user['name'], user['email'], user['picture'])
         if new_user:
-            return {'status_code': 200,
-                    'msg': 'New User Created! Login Successful'}
+            return JSONResponse({'status_code': 200,
+                                 'msg': 'New User Created! Login Successful',
+                                 'access_token': create_token(user['email'])})
         else:
             return RedirectResponse(url='/')

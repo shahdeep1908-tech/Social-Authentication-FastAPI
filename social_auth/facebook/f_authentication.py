@@ -5,6 +5,8 @@ from social_auth import oauth
 from dotenv import load_dotenv
 from social_auth import models
 import pyshorteners
+from starlette.responses import JSONResponse
+from social_auth.oauth2 import create_token
 
 load_dotenv()
 
@@ -36,14 +38,16 @@ async def facebook_auth(request: Request):
 
     user_data = models.User.check_user_exists(user['email'])
     if user_data:
-        return {'status_code': 200,
-                'msg': 'User Exists! Login Successful'}
+        return JSONResponse({'status_code': 200,
+                             'msg': 'User Exists! Login Successful',
+                             'access_token': create_token(user['login'])})
     else:
         type_tiny = pyshorteners.Shortener()
         short_url = type_tiny.tinyurl.short(user['picture']['data']['url'])
         new_user = models.User.create_user(user['id'], user['name'], user['email'], short_url)
         if new_user:
-            return {'status_code': 200,
-                    'msg': 'New User Created! Login Successful'}
+            return JSONResponse({'status_code': 200,
+                                 'msg': 'New User Created! Login Successful',
+                                 'access_token': create_token(user['login'])})
         else:
             return RedirectResponse(url='/')

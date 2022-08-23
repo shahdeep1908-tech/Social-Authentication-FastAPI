@@ -1,9 +1,11 @@
 import json
 from starlette.responses import HTMLResponse
+from social_auth import models
 
 
 class SocialAuthHomepage:
     def __init__(self, request, ):
+        self.email = None
         self.request = request
 
     def homepage(self):
@@ -26,3 +28,8 @@ class SocialAuthHomepage:
                             '<a href="/linkedin/login">LinkedIn Login</a>'
                             '<br><hr>'
                             '<a href="/instagram/login">Instagram Login</a>')
+
+    def user_data(self, email):
+        self.email = email
+        userData = models.User.get_user_data(self.email)
+        return userData

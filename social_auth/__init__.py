@@ -11,7 +11,7 @@ oauth = OAuth(config)
 def create_app():
     app = FastAPI(
         title='Social Authentication Routes',
-        description='GOOGLE | TWITTER | SOCIAL AUTHENTICATION',
+        description='GOOGLE | TWITTER | FACEBOOK | GITHUB | LINKEDIN | INSTAGRAM --- SOCIAL AUTHENTICATION',
         version='1.0.0',
     )
     app.add_middleware(SessionMiddleware, secret_key="!secret")

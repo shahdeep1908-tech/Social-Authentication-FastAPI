@@ -1,7 +1,6 @@
 from database import Base, get_db
-from sqlalchemy import Column, Integer, String, or_
+from sqlalchemy import Column, String, or_
 from sqlalchemy.exc import SQLAlchemyError
-
 
 db = next(get_db())
 
@@ -31,3 +30,7 @@ class User(Base):
             return user
         except SQLAlchemyError as e:
             return e
+
+    @classmethod
+    def get_user_data(cls, user):
+        return db.query(cls).filter(or_(cls.email == user, cls.username == user)).first()

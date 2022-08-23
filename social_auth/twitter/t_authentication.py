@@ -5,6 +5,8 @@ from fastapi import APIRouter
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from social_auth import oauth, models
+from starlette.responses import JSONResponse
+from social_auth.oauth2 import create_token
 
 
 router = APIRouter(
@@ -36,15 +38,17 @@ async def twitter_auth(request: Request):
 
     user_data = models.User.check_user_exists(user['email'])
     if user_data:
-        return {'status_code': 200,
-                'msg': 'User Exists! Login Successful'}
+        return JSONResponse({'status_code': 200,
+                             'msg': 'User Exists! Login Successful',
+                             'access_token': create_token(user['email'])})
     else:
         type_tiny = pyshorteners.Shortener()
         short_url = type_tiny.tinyurl.short(user['profile_image_url_https'])
         new_user = models.User.create_user(str(user['id']), user['screen_name'], user['email'], short_url)
         if new_user:
-            return {'status_code': 200,
-                    'msg': 'New User Created! Login Successful'}
+            return JSONResponse({'status_code': 200,
+                                 'msg': 'New User Created! Login Successful',
+                                 'access_token': create_token(user['email'])})
         else:
             return RedirectResponse(url='/')
 
