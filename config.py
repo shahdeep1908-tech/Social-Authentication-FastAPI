@@ -1,5 +1,9 @@
 from pydantic import BaseSettings
 
+"""
+Configuration file to communicate with Environment variable sin .env file
+"""
+
 
 class Settings(BaseSettings):
     DB_URL: str

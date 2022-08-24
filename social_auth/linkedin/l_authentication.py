@@ -6,11 +6,17 @@ from social_auth import oauth, models
 from starlette.responses import JSONResponse
 from social_auth.oauth2 import create_token
 
+"""
+LinkedIn Login Route: It contains 2 routes /login and /auth routes.
+/login route redirect homepage to linkedin authentication page.
+/auth route goes to linkedin login page to fetch access token and further user_data.
+"""
 
 router = APIRouter(
     tags=["Authentication"]
 )
 
+"""Below are linkedin registration urls"""
 linkedin = oauth.register(
     name='linkedin',
     access_token_url='https://www.linkedin.com/oauth/v2/accessToken',
@@ -21,12 +27,22 @@ linkedin = oauth.register(
 
 @router.get('/linkedin/login')
 async def login(request: Request):
+    """
+    Creates redirect url and pass to linkedin_auth function.
+    :param request: Request object - Fetch user request token.
+    :return: oauth redirect url
+    """
     redirect_uri = request.url_for('linkedin_auth')
     return await oauth.linkedin.authorize_redirect(request, redirect_uri)
 
 
 @router.get('/linkedin/auth')
 async def linkedin_auth(request: Request):
+    """
+    Redirect to linkedin login page and create access token and fetch userdata.
+    :param request: Request object - Fetch user request token.
+    :return: Json Object - login-user access_token.
+    """
     token = await oauth.linkedin.authorize_access_token(request)
     profile = 'https://api.linkedin.com/v2/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))'
     prof_resp = await oauth.linkedin.get(profile, token=token)
