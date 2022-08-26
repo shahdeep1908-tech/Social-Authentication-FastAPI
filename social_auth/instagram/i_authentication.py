@@ -50,21 +50,20 @@ async def insta_auth(request: Request):
     url = 'https://graph.instagram.com/v14.0/me'
     resp = await oauth.instagram.get(url, token=token)
     user_id = resp.json()
-
     account_url = f'https://graph.instagram.com/{user_id["id"]}?fields=id,account_type,username,media_count'
+
     acc_resp = await oauth.instagram.get(account_url, token=token)
     user = acc_resp.json()
 
-    user_data = models.User.check_user_exists(user['username'])
-    if user_data:
+    if user_data := models.User.check_user_exists(user['username']):
+        print(user_data)
         return JSONResponse({'status_code': 200,
                              'msg': 'User Exists! Login Successful',
                              'access_token': create_token(user['username'])})
-    else:
-        new_user = models.User.create_user(str(user['id']), user['username'], None, None)
-        if new_user:
-            return JSONResponse({'status_code': 200,
-                                 'msg': 'New User Created! Login Successful',
-                                 'access_token': create_token(user['username'])})
-        else:
-            return RedirectResponse(url='/')
+
+    if not (new_user := models.User.create_user(str(user['id']), user['username'], None, None)):
+        print(new_user)
+        return RedirectResponse(url='/')
+    return JSONResponse({'status_code': 200,
+                         'msg': 'New User Created! Login Successful',
+                         'access_token': create_token(user['username'])})

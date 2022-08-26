@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from datetime import timedelta
 from config import Settings
 
@@ -41,12 +41,12 @@ def create_access_token(*, data: dict, expires_delta: timedelta = None):
     """
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({'exp': expire})
-    encoded_jwt = jwt.encode(to_encode, API_SECRET_KEY, algorithm=API_ALGORITHM)
-    return encoded_jwt
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    # to_encode.update({'exp': expire})
+    to_encode['exp'] = expire
+    return jwt.encode(to_encode, API_SECRET_KEY, algorithm=API_ALGORITHM)
 
 
 # Create token for an email
@@ -57,8 +57,7 @@ def create_token(email):
     :return: str - access_token
     """
     access_token_expires = timedelta(minutes=API_ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={'sub': email}, expires_delta=access_token_expires)
-    return access_token
+    return create_access_token(data={'sub': email}, expires_delta=access_token_expires)
 
 
 async def get_current_user_email(token: str = Depends(oauth2_scheme)):
@@ -69,8 +68,7 @@ async def get_current_user_email(token: str = Depends(oauth2_scheme)):
     """
     try:
         payload = jwt.decode(token, API_SECRET_KEY, algorithms=[API_ALGORITHM])
-        email: str = payload.get('sub')
-        if email:
+        if email := payload.get('sub'):
             return email
-    except jwt.PyJWTError:
-        raise CREDENTIALS_EXCEPTION
+    except jwt.PyJWTError as e:
+        raise CREDENTIALS_EXCEPTION from e

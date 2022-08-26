@@ -22,8 +22,7 @@ class SocialAuthHomepage:
         HTML Response script for UI based api call
         :return: Social Auth Buttons to redirect on its login routes.
         """
-        user = self.request.session.get('user')
-        if user:
+        if user := self.request.session.get('user'):
             data = json.dumps(user)
             html = (
                 f'<pre>{data}</pre>'
@@ -49,5 +48,4 @@ class SocialAuthHomepage:
         :return: userData from users Table.
         """
         self.email = email
-        userData = models.User.get_user_data(self.email)
-        return userData
+        return models.User.get_user_data(self.email)

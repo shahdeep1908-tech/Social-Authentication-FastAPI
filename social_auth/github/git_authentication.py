@@ -50,18 +50,17 @@ async def git_auth(request: Request):
     resp = await oauth.github.get(url, token=token)
     user = resp.json()
 
-    user_data = models.User.check_user_exists(user['login'])
-    if user_data:
+    if user_data := models.User.check_user_exists(user['login']):
+        print(user_data)
         return JSONResponse({'status_code': 200,
                              'msg': 'User Exists! Login Successful',
                              'access_token': create_token(user['login'])})
-    else:
-        type_tiny = pyshorteners.Shortener()
-        short_url = type_tiny.tinyurl.short(user['avatar_url'])
-        new_user = models.User.create_user(str(user['id']), user['login'], None, short_url)
-        if new_user:
-            return JSONResponse({'status_code': 200,
-                                 'msg': 'New User Created! Login Successful',
-                                 'access_token': create_token(user['login'])})
-        else:
-            return RedirectResponse(url='/')
+
+    type_tiny = pyshorteners.Shortener()
+    short_url = type_tiny.tinyurl.short(user['avatar_url'])
+    if not (new_user := models.User.create_user(str(user['id']), user['login'], None, short_url)):
+        print(new_user)
+        return RedirectResponse(url='/')
+    return JSONResponse({'status_code': 200,
+                         'msg': 'New User Created! Login Successful',
+                         'access_token': create_token(user['login'])})

@@ -39,7 +39,7 @@ async def login(request: Request):
 @router.get('/linkedin/auth')
 async def linkedin_auth(request: Request):
     """
-    Redirect to linkedin login page and create access token and fetch userdata.
+    Redirect to LinkedIn login page and create access token and fetch userdata.
     :param request: Request object - Fetch user request token.
     :return: Json Object - login-user access_token.
     """
@@ -52,19 +52,17 @@ async def linkedin_auth(request: Request):
     email = resp.json()
     user['EmailAddress'] = email
 
-    user_data = models.User.check_user_exists(user['EmailAddress']['elements'][0]['handle~']['emailAddress'])
-    if user_data:
+    if user_data := models.User.check_user_exists(user['EmailAddress']['elements'][0]['handle~']['emailAddress']):
+        print(user_data)
         return JSONResponse({'status_code': 200,
                              'msg': 'User Exists! Login Successful',
                              'access_token': create_token(user['EmailAddress']['elements'][0]['handle~']['emailAddress'])})
-    else:
-        type_tiny = pyshorteners.Shortener()
-        short_url = type_tiny.tinyurl.short(user['profilePicture']['displayImage~']['elements'][0]['identifiers'][0]['identifier'])
-        new_user = models.User.create_user(str(user['id']), None, user['EmailAddress']['elements'][0]['handle~']['emailAddress'], short_url)
-        if new_user:
-            return JSONResponse({'status_code': 200,
-                                 'msg': 'New User Created! Login Successful',
-                                 'access_token': create_token(user['EmailAddress']['elements'][0]['handle~']['emailAddress'])})
-        else:
-            return RedirectResponse(url='/')
 
+    type_tiny = pyshorteners.Shortener()
+    short_url = type_tiny.tinyurl.short(user['profilePicture']['displayImage~']['elements'][0]['identifiers'][0]['identifier'])
+    if not (new_user := models.User.create_user(str(user['id']), None, user['EmailAddress']['elements'][0]['handle~']['emailAddress'], short_url)):
+        print(new_user)
+        return RedirectResponse(url='/')
+    return JSONResponse({'status_code': 200,
+                         'msg': 'New User Created! Login Successful',
+                         'access_token': create_token(user['EmailAddress']['elements'][0]['handle~']['emailAddress'])})

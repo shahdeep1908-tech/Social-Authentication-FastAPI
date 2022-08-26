@@ -52,19 +52,18 @@ async def twitter_auth(request: Request):
         url, params={'skip_status': True, 'include_email': True}, token=token)
     user = resp.json()
 
-    user_data = models.User.check_user_exists(user['email'])
-    if user_data:
+    if user_data := models.User.check_user_exists(user['email']):
+        print(user_data)
         return JSONResponse({'status_code': 200,
                              'msg': 'User Exists! Login Successful',
                              'access_token': create_token(user['email'])})
-    else:
-        type_tiny = pyshorteners.Shortener()
-        short_url = type_tiny.tinyurl.short(user['profile_image_url_https'])
-        new_user = models.User.create_user(str(user['id']), user['screen_name'], user['email'], short_url)
-        if new_user:
-            return JSONResponse({'status_code': 200,
-                                 'msg': 'New User Created! Login Successful',
-                                 'access_token': create_token(user['email'])})
-        else:
-            return RedirectResponse(url='/')
 
+    type_tiny = pyshorteners.Shortener()
+    short_url = type_tiny.tinyurl.short(user['profile_image_url_https'])
+    if not (new_user := models.User.create_user(str(user['id']), user['screen_name'], user['email'], short_url)):
+        print(new_user)
+        return RedirectResponse(url='/')
+
+    return JSONResponse({'status_code': 200,
+                         'msg': 'New User Created! Login Successful',
+                         'access_token': create_token(user['email'])})

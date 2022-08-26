@@ -53,18 +53,18 @@ async def facebook_auth(request: Request):
     resp = await oauth.facebook.get(url, token=token)
     user = resp.json()
 
-    user_data = models.User.check_user_exists(user['email'])
-    if user_data:
+    if user_data := models.User.check_user_exists(user['email']):
+        print(user_data)
         return JSONResponse({'status_code': 200,
                              'msg': 'User Exists! Login Successful',
                              'access_token': create_token(user['login'])})
-    else:
-        type_tiny = pyshorteners.Shortener()
-        short_url = type_tiny.tinyurl.short(user['picture']['data']['url'])
-        new_user = models.User.create_user(user['id'], user['name'], user['email'], short_url)
-        if new_user:
-            return JSONResponse({'status_code': 200,
-                                 'msg': 'New User Created! Login Successful',
-                                 'access_token': create_token(user['login'])})
-        else:
-            return RedirectResponse(url='/')
+
+    type_tiny = pyshorteners.Shortener()
+    short_url = type_tiny.tinyurl.short(user['picture']['data']['url'])
+    if not (new_user := models.User.create_user(user['id'], user['name'], user['email'], short_url)):
+        return RedirectResponse(url='/')
+
+    print(new_user)
+    return JSONResponse({'status_code': 200,
+                         'msg': 'New User Created! Login Successful',
+                         'access_token': create_token(user['login'])})

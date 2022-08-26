@@ -51,17 +51,15 @@ async def auth(request: Request):
         return HTMLResponse(f'<h1>{error.error}</h1>')
 
     user = token.get('userinfo')
-
-    user_data = models.User.check_user_exists(user['email'])
-    if user_data:
+    if user_data := models.User.check_user_exists(user['email']):
+        print(user_data)
         return JSONResponse({'status_code': 200,
                              'msg': 'User Exists! Login Successful',
                              'access_token': create_token(user['email'])})
-    else:
-        new_user = models.User.create_user(str(user['sub']), user['name'], user['email'], user['picture'])
-        if new_user:
-            return JSONResponse({'status_code': 200,
-                                 'msg': 'New User Created! Login Successful',
-                                 'access_token': create_token(user['email'])})
-        else:
-            return RedirectResponse(url='/')
+
+    if not (new_user := models.User.create_user(str(user['sub']), user['name'], user['email'], user['picture'])):
+        print(new_user)
+        return RedirectResponse(url='/')
+    return JSONResponse({'status_code': 200,
+                         'msg': 'New User Created! Login Successful',
+                         'access_token': create_token(user['email'])})
