@@ -49,6 +49,9 @@ async def facebook_auth(request: Request):
     :return: Json Object - login-user access_token.
     """
     token = await oauth.facebook.authorize_access_token(request)
+    print('++++++++++++++++++++++++++++++++++++++++++++++')
+    print(token)
+    print('++++++++++++++++++++++++++++++++++++++++++++++')
     url = 'https://graph.facebook.com/me?fields=id,name,email,picture{url}'
     resp = await oauth.facebook.get(url, token=token)
     user = resp.json()
@@ -57,7 +60,7 @@ async def facebook_auth(request: Request):
         print(user_data)
         return JSONResponse({'status_code': 200,
                              'msg': 'User Exists! Login Successful',
-                             'access_token': create_token(user['login'])})
+                             'access_token': create_token(user['email'])})
 
     type_tiny = pyshorteners.Shortener()
     short_url = type_tiny.tinyurl.short(user['picture']['data']['url'])
@@ -67,4 +70,4 @@ async def facebook_auth(request: Request):
     print(new_user)
     return JSONResponse({'status_code': 200,
                          'msg': 'New User Created! Login Successful',
-                         'access_token': create_token(user['login'])})
+                         'access_token': create_token(user['email'])})
