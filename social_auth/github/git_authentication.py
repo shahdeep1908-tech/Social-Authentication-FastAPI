@@ -33,7 +33,7 @@ async def login(request: Request):
     :param request: Request object - Fetch user request token.
     :return: oauth redirect url
     """
-    redirect_uri = request.url_for('git_auth')
+    redirect_uri = str(request.url_for('git_auth'))
     return await oauth.github.authorize_redirect(request, redirect_uri)
 
 
